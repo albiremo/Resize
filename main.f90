@@ -3,15 +3,13 @@ PROGRAM main
 
 USE resize
 
+IMPLICIT NONE
 !---------------------------- dichiaro--------------------------- !
-INTEGER :: nx,ny,nz,nxn,nzn
 INTEGER  :: ix, IIX, IXold,iz,IIZ,IZold,iV,ii,iy !divisione del dominio
-REAL(KIND=8), PARAMETER  :: NNx = 1, NNz = 1
-REAL(KIND=8) :: alfa0,alfa0n,beta0n,ni,a,ymin,ymax, time, timen
-COMPLEX, allocatable :: V(:,:,:,:)
-COMPLEX, allocatable :: Vn(:,:,:,:)
+REAL(KIND=8), PARAMETER  :: NNx = 2, NNz = 1
 character(len=40) :: filename
-
+CALL read_dnsin()
+ALLOCATE(V(-1:ny+1,-nz:nz,0:nx,1:3))
 CALL read_restart_file()
 
   ! Output DNS.in
@@ -46,22 +44,25 @@ timen = 0
   WRITE(*,"(A,F6.4,A,F6.4,A,F8.6)") "   alfa0 =",alfa0n,"       beta0 =",beta0n,"   ni =",ni
   WRITE(*,*) " "
 
-
-DO ix = 1, nx, 1
+ALLOCATE(Vn(-1:ny+1,-nzn:nzn,0:nxn,1:3))
+DO ix = 0, nxn, 1
   IIX = ix+1
   IXold = FLOOR(ix*NNx) + 1
-  WRITE(*,*) "computing new"
+  WRITE(*,*)"calcola ix"
+  !WRITE(*,"(A,I5)") "   nx =",ix
   DO iz = -nzn,nzn,1
     IIZ = iz + 1 + nzn;     IZold = FLOOR(iz*NNz) + 1 + nz
     DO iV=1,3
-        DO iy=1,ny+3
+        DO iy=-1,ny+1
           Vn(iy,IIZ,IIX,iV) = V(iy,IZold,IXold,iV)
         END DO
     END DO
   END DO
 END DO
+
+WRITE(*,*) SHAPE(V)
 ! salvataggio
 WRITE(*,*) "Writing Dati.cart.out NEW"
-filename="Dati.cart2.out"; CALL save_restart_file(filename)
+filename="Dati.cart2.out"; CALL save_restart_file(filename); CALL free_memory
 
 END PROGRAM main
